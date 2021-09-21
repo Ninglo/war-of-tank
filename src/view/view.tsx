@@ -4,9 +4,10 @@ import { connect, useDispatch, useSelector } from "react-redux";
 import type { IGame, IGameItem, IGameMap, IGameRow } from "../type";
 import { actions, selector } from "../modal/gameSlice";
 import "./index.scss";
+import { setMap } from "../lib/utils";
 
 const GameItem = ({ name }: IGameItem) => {
-  return <div className="game-item">{name}</div>;
+  return <div className={`game-item game-item-${name}`}>{name}</div>;
 };
 
 const GameRow = ({ row }: IGameRow) => {
@@ -18,20 +19,20 @@ const GameRow = ({ row }: IGameRow) => {
     </div>
   );
 };
-
+type UpdateMap = (state: IGame) => IGameMap["map"];
+const updateMap: UpdateMap = (state) => {
+  return state.tanks.reduce(
+    (prevMap, tank) => setMap(prevMap, tank, tank.location),
+    state.map
+  );
+};
 export const GameMap: FC = () => {
-  const dispatch = useDispatch();
   const gameState = useSelector(selector);
-  const { isInited, map } = gameState;
+  const renderMap = updateMap(gameState);
 
-  useEffect(() => {
-    if (!isInited) {
-      dispatch(actions.createMap([3, 5]));
-    }
-  }, []);
   return (
     <div className="game-map">
-      {map.map((row, i) => (
+      {renderMap.map((row, i) => (
         <GameRow key={i} row={row} />
       ))}
     </div>
