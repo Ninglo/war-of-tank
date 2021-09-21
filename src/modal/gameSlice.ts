@@ -54,10 +54,9 @@ export const { actions, selector, reducer } = createSlice(
       },
       moveTank(event: KeyboardMoveEvent) {
         return setState((state) => {
-          const mapSize = getMapSize(state.map);
           const tanks = state.tanks.map((tank) => ({
             ...tank,
-            location: moveLocation(event, tank.location, mapSize),
+            location: moveLocation(event, tank.location, state.map),
           }));
 
           const curtState: IGame = {

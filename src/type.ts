@@ -1,6 +1,7 @@
 const GameItemNameEnum = {
   void: 0,
   tank: 1,
+  water: 2,
 } as const;
 type GameItemName = typeof GameItemNameEnum[keyof typeof GameItemNameEnum];
 type StaticItemName = Exclude<GameItemName, typeof GameItemNameEnum["tank"]>;

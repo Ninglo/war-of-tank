@@ -29,9 +29,10 @@ export const setMap: SetMap = (map, item, [x, y]) => {
 type MoveLocation = (
   event: KeyboardMoveEvent,
   location: Location,
-  mapSize: MapSize
+  map: GameMap
 ) => Location;
-export const moveLocation: MoveLocation = (event, [x, y], [width, height]) => {
+export const moveLocation: MoveLocation = (event, [x, y], gameMap) => {
+  const [width, height] = getMapSize(gameMap);
   if (event === "ArrowUp") {
     return y > 0 ? [x, y - 1] : [x, y];
   } else if (event === "ArrowDown") {
@@ -50,3 +51,6 @@ type GetMapSize = (gameMap: GameMap) => MapSize;
 export const getMapSize: GetMapSize = (gameMap) => {
   return [gameMap[0].length, gameMap.length];
 };
+
+type IsValidMove = (gameMap: GameMap, location: Location) => boolean
+const isValidMove = ()
