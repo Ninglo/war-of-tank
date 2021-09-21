@@ -1,46 +1,54 @@
-const GameItemNameEnum = {
+const GameItemEnum = {
   void: 0,
-  tank: 1,
-  water: 2,
-} as const;
-type GameItemName = typeof GameItemNameEnum[keyof typeof GameItemNameEnum];
-type StaticItemName = Exclude<GameItemName, typeof GameItemNameEnum["tank"]>;
-interface IGameItem<T = GameItemName> {
-  name: T;
+  user1: 1,
+  user2: 2,
+  enemyTank: 3,
+  water: 4,
+} as const
+type GameItemType = typeof GameItemEnum
+type GameItem = typeof GameItemEnum[keyof typeof GameItemEnum]
+interface IGameItem {
+  name: GameItem
 }
-type GameRow = IGameItem[];
-type GameMap = GameRow[];
+type GameRow = GameItem[]
+type GameMap = GameRow[]
 interface IGameRow {
-  row: GameRow;
+  row: GameRow
 }
 interface IGameMap {
-  map: GameMap;
+  map: GameMap
 }
-interface ITank extends IGameItem {
-  location: Location;
+interface ITank {
+  location: Location
+  type: TankType
 }
-type StaticMap = IGameItem<StaticItemName>[][];
 
 interface IGame {
-  map: GameMap;
-  isInited: boolean;
-  tanks: ITank[];
+  map: GameMap
+  isInited: boolean
+  userTanks: ITank[]
+  enemyTanks: ITank[]
 }
 
-type KeyboardMoveEvent = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
-type MapSize = [col: number, row: number];
-type Location = [x: number, y: number];
+type TankType =
+  | GameItemType['user1']
+  | GameItemType['user2']
+  | GameItemType['enemyTank']
+type KeyboardMoveEvent = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
+type MapSize = [col: number, row: number]
+type Location = [x: number, y: number]
 
-export { GameItemNameEnum };
+export { GameItemEnum }
 export type {
   GameMap,
-  StaticMap,
-  IGameMap,
+  GameItem,
   IGameItem,
+  IGameMap,
   IGameRow,
   IGame,
   ITank,
   MapSize,
   Location,
   KeyboardMoveEvent,
-};
+  TankType,
+}
