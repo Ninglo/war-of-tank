@@ -12,6 +12,7 @@ import {
 } from "../type";
 
 type Range = (start: number, end: number) => number[];
+
 export const range: Range = (start, end) => {
   const length = end - start;
   return length > 0 ? [...Array(length).keys()].map((val) => val + start) : [];
