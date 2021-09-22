@@ -2,7 +2,6 @@ import _ from "lodash";
 import {
   DirectionEnum,
   DirectionValue,
-  GameItem,
   GameItemEnum,
   GameMap,
   IGame,
