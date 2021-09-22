@@ -16,5 +16,24 @@
     .game-item-1 {
       color: red;
     }
+
+    // const DirectionEnum = {
+    //   up: 1,
+    //   down: 2,
+    //   left: 3,
+    //   right: 4,
+    // } as const;
+    .game-item-direction-1 {
+      transform: rotate(0deg);
+    }
+    .game-item-direction-2 {
+      transform: rotate(180deg);
+    }
+    .game-item-direction-4 {
+      transform: rotate(90deg);
+    }
+    .game-item-direction-3 {
+      transform: rotate(270deg);
+    }
   }
 }

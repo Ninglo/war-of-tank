@@ -1,71 +1,56 @@
-import React, { FC, useCallback, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { selector, actions } from '../modal/gameSlice'
-import { GameItemEnum } from '../type'
-import { GameMap } from './view'
+import { FC, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { actions } from "../modal/gameSlice";
+import { DirectionEnum, GameItemEnum } from "../type";
+import ControlPanal from "./controlPanal/view";
+import { GameMap } from "./gameMap/view";
+import "./index.scss";
 
 const MapEvent = {
-  w: 'ArrowUp',
-  s: 'ArrowDown',
-  a: 'ArrowLeft',
-  d: 'ArrowRight',
-} as const
+  w: DirectionEnum.up,
+  s: DirectionEnum.down,
+  a: DirectionEnum.left,
+  d: DirectionEnum.right,
+  ArrowUp: DirectionEnum.up,
+  ArrowDown: DirectionEnum.down,
+  ArrowLeft: DirectionEnum.left,
+  ArrowRight: DirectionEnum.right,
+} as const;
 
 const App: FC = () => {
-  const dispatch = useDispatch()
-  const gameState = useSelector(selector)
-  const { isInited, userTanks } = gameState
-  const { length } = userTanks
-
-  const addTank = useCallback(() => {
-    dispatch(
-      actions.createTank(
-        [0, 0],
-        length ? GameItemEnum.user2 : GameItemEnum.user1
-      )
-    )
-  }, [dispatch, length])
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!isInited) {
-      dispatch(actions.createMap([10, 10]))
-    }
-  }, [dispatch, isInited])
-
-  useEffect(() => {
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener("keydown", (event) => {
       if (
-        event.key === 'ArrowUp' ||
-        event.key === 'ArrowDown' ||
-        event.key === 'ArrowLeft' ||
-        event.key === 'ArrowRight'
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown" ||
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight"
       )
-        dispatch(actions.moveTank(GameItemEnum.user1, [event.key] as any))
-    })
-  }, [dispatch])
+        dispatch(actions.moveTank(GameItemEnum.user1, [MapEvent[event.key]]));
+    });
+  }, [dispatch]);
 
   useEffect(() => {
-    document.addEventListener('keypress', (event) => {
+    document.addEventListener("keypress", (event) => {
       if (
-        event.key === 'w' ||
-        event.key === 's' ||
-        event.key === 'a' ||
-        event.key === 'd'
+        event.key === "w" ||
+        event.key === "s" ||
+        event.key === "a" ||
+        event.key === "d"
       )
-        dispatch(
-          actions.moveTank(GameItemEnum.user2, [
-            MapEvent[event.key as 'w' | 's' | 'a' | 'd'],
-          ])
-        )
-    })
-  }, [dispatch])
+        dispatch(actions.moveTank(GameItemEnum.user2, [MapEvent[event.key]]));
+      console.log(event.key);
+    });
+  }, [dispatch]);
 
   return (
     <div className="App">
       <GameMap />
-      {length < 2 && <button onClick={addTank}>Add tank!</button>}
+      <ControlPanal />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
