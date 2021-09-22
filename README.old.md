@@ -16,6 +16,29 @@ controller:
 
 接受 IO，修改 modal 二维数组的值
 
+STATE =IO=> new STATE =IO=> new STATE
+
+IO type:
+
+tank move
+
+map =moveEvent=> =removeThisTank=> =TryMove=> new map
+
+tank shoot
+
+map =shootEvent=> =addBullet=> map
+
+Bullet move
+
+map =moveEvent=> =removeThisBullet=> =TryMove=> if void
+? new Map : =removeBulletAndItem=> setBoom => new Map
+
+Boom remove
+
+map =removeEvent=> =removeAllBoom=> new Map
+
+
+
 ## 实现思路
 
 modal:
