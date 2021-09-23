@@ -1,2 +1,2 @@
-export const SECOND = 1000 / 120;
+export const ONE_SECOND = 1000 / 120;
 

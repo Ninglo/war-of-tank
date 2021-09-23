@@ -7,32 +7,46 @@
       justify-content: center;
       align-items: center;
 
-      width: 48px;
-      height: 48px;
+      width: 16px;
+      height: 16px;
 
-      border: 1px solid black;
+      background: black;
     }
 
-    .game-item-1 {
-      color: red;
-    }
-
-    // const DirectionEnum = {
-    //   up: 1,
-    //   down: 2,
-    //   left: 3,
-    //   right: 4,
+    // const GameItemEnum = {
+    //   void: "",
+    //   user1: "user1",
+    //   user2: "user2",
+    //   enemyTank: "enemy",
+    //   water: "water",
+    //   bullet: "bullet",
     // } as const;
-    .game-item-direction-1 {
+    .game-item-user1 {
+      background: yellow;
+    }
+    .game-item-user2 {
+      background: green;
+    }
+    .game-item-enemy {
+      background: azure;
+    }
+    .game-item-water {
+      background: blue;
+    }
+    .game-item-bullet {
+      background: aliceblue;
+    }
+
+    .game-item-direction-up {
       transform: rotate(0deg);
     }
-    .game-item-direction-2 {
+    .game-item-direction-down {
       transform: rotate(180deg);
     }
-    .game-item-direction-4 {
+    .game-item-direction-right {
       transform: rotate(90deg);
     }
-    .game-item-direction-3 {
+    .game-item-direction-left {
       transform: rotate(270deg);
     }
   }

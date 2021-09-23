@@ -1,23 +1,26 @@
 type EnumValue<T> = T[keyof T];
 const DirectionEnum = {
-  up: 1,
-  down: 2,
-  left: 3,
-  right: 4,
+  up: "up",
+  down: "down",
+  left: "left",
+  right: "right",
 } as const;
+type Matrix<T = unknown> = T[][];
 type DirectionType = keyof typeof DirectionEnum;
 type DirectionValue = EnumValue<typeof DirectionEnum>;
 const GameItemEnum = {
-  void: 0,
-  user1: 1,
-  user2: 2,
-  enemyTank: 3,
-  water: 4,
+  void: "",
+  user1: "user1",
+  user2: "user2",
+  enemyTank: "enemy",
+  water: "water",
+  bullet: "bullet",
 } as const;
 type GameItemType = typeof GameItemEnum;
 type GameItem = {
-  type: EnumValue<typeof GameItemEnum>;
+  type: EnumValue<GameItemType>;
   direction?: DirectionValue;
+  locationType?: number;
 };
 type IGameItem = GameItem;
 type GameRow = GameItem[];
@@ -28,9 +31,16 @@ interface IGameRow {
 interface IGameMap {
   map: GameMap;
 }
-interface ITank {
+type ComplexLocation = {
+  prevLocation: Location;
   location: Location;
-  type: TankType;
+  locationType: number;
+};
+type IBullet = IMoveItem<GameItemType["bullet"]>;
+type ITank = IMoveItem<TankType>;
+interface IMoveItem<T = EnumValue<GameItemType>> {
+  complexLocations: ComplexLocation[];
+  type: T;
   direction: DirectionValue;
 }
 
@@ -50,6 +60,7 @@ type Location = [x: number, y: number];
 
 export { GameItemEnum, DirectionEnum };
 export type {
+  Matrix,
   GameMap,
   GameItem,
   IGameItem,
@@ -62,4 +73,7 @@ export type {
   TankType,
   DirectionType,
   DirectionValue,
+  IMoveItem,
+  IBullet,
+  ComplexLocation,
 };

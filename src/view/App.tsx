@@ -5,6 +5,8 @@ import { DirectionEnum, GameItemEnum } from "../type";
 import ControlPanal from "./controlPanal/view";
 import { GameMap } from "./gameMap/view";
 import "./index.scss";
+import { ONE_SECOND } from "../const/time";
+import _ from "lodash";
 
 const MapEvent = {
   w: DirectionEnum.up,
@@ -21,28 +23,35 @@ const App: FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    document.addEventListener("keydown", (event) => {
-      if (
-        event.key === "ArrowUp" ||
-        event.key === "ArrowDown" ||
-        event.key === "ArrowLeft" ||
-        event.key === "ArrowRight"
-      )
-        dispatch(actions.moveTank(GameItemEnum.user1, [MapEvent[event.key]]));
-    });
+    document.addEventListener(
+      "keydown",
+      _.throttle((event: KeyboardEvent) => {
+        if (
+          event.key === "ArrowUp" ||
+          event.key === "ArrowDown" ||
+          event.key === "ArrowLeft" ||
+          event.key === "ArrowRight"
+        ) {
+          dispatch(actions.moveTank(GameItemEnum.user1, [MapEvent[event.key]]));
+        }
+      }, ONE_SECOND)
+    );
   }, [dispatch]);
 
   useEffect(() => {
-    document.addEventListener("keypress", (event) => {
-      if (
-        event.key === "w" ||
-        event.key === "s" ||
-        event.key === "a" ||
-        event.key === "d"
-      )
-        dispatch(actions.moveTank(GameItemEnum.user2, [MapEvent[event.key]]));
-      console.log(event.key);
-    });
+    document.addEventListener(
+      "keypress",
+      _.throttle((event: KeyboardEvent) => {
+        if (
+          event.key === "w" ||
+          event.key === "s" ||
+          event.key === "a" ||
+          event.key === "d"
+        ) {
+          dispatch(actions.moveTank(GameItemEnum.user2, [MapEvent[event.key]]));
+        }
+      }, ONE_SECOND)
+    );
   }, [dispatch]);
 
   return (

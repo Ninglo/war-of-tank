@@ -21,7 +21,7 @@ const ControlPanal: FC = () => {
   }, [dispatch, length]);
 
   const createMap = useCallback(() => {
-    dispatch(actions.createMap([26, 18]));
+    dispatch(actions.createMap([52, 36]));
   }, [dispatch]);
 
   return (

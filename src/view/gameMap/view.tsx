@@ -1,23 +1,20 @@
 import type { FC } from "react";
 import { useSelector } from "react-redux";
-import type { IGameItem, IGameRow } from "../../type";
+import { IGameItem, IGameRow } from "../../type";
 import { selector } from "../../modal/gameSlice";
+import React from "react";
 
-const GameItem = ({ type, direction }: IGameItem) => {
-  direction && console.log(direction);
+const GameItem = React.memo(({ type, direction }: IGameItem) => {
   return (
     <div
       className={`game-item game-item-${type} ${
         direction ? `game-item-direction-${direction}` : ""
       }`}
-    >
-      {}
-      {type === 1 ? "user1" : type === 2 ? "user2" : type}
-    </div>
+    ></div>
   );
-};
+});
 
-const GameRow = ({ row }: IGameRow) => {
+const GameRow = React.memo(({ row }: IGameRow) => {
   return (
     <div className="game-row">
       {row.map((item, i) => (
@@ -25,7 +22,7 @@ const GameRow = ({ row }: IGameRow) => {
       ))}
     </div>
   );
-};
+});
 
 export const GameMap: FC = () => {
   const gameState = useSelector(selector);

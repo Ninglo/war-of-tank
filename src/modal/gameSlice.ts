@@ -3,9 +3,10 @@ import {
   changeIthVal,
   createMatrix,
   moveLocation,
-  setMap,
+  setComplexItemInMap,
   updateMap,
 } from "../lib/utils";
+import Tank from "../class/tank";
 import {
   GameItemEnum,
   IGame,
@@ -42,7 +43,6 @@ export const { actions, selector, reducer } = createSlice(
             map: map,
             isInited: true,
           };
-          curtState.map[3][3] = { type: 3 };
           return curtState;
         });
       },
@@ -52,7 +52,7 @@ export const { actions, selector, reducer } = createSlice(
         direction: DirectionValue
       ) {
         return setState((state) => {
-          const tank: ITank = { location, type, direction };
+          const tank: ITank = new Tank(location, type, direction);
           const pickState:
             | Pick<IGame, "userTanks">
             | Pick<IGame, "enemyTanks"> =
@@ -67,7 +67,7 @@ export const { actions, selector, reducer } = createSlice(
           const curtState: IGame = {
             ...state,
             ...pickState,
-            map: setMap(state.map, { type }, tank.location),
+            map: setComplexItemInMap(state.map, tank),
           };
 
           return updateMap(curtState);
@@ -84,16 +84,9 @@ export const { actions, selector, reducer } = createSlice(
                 if (tank.type !== tankType) {
                   return prevState;
                 }
-                const curtMap = setMap(
-                  prevState.map,
-                  { type: GameItemEnum.void },
-                  tank.location
-                );
-                const curtUserTanks = changeIthVal(
-                  prevState.userTanks,
-                  moveLocation(event[0], tank, curtMap),
-                  i
-                );
+                const curtMap = setComplexItemInMap(prevState.map, tank);
+                const res = moveLocation(event[0], tank, curtMap);
+                const curtUserTanks = changeIthVal(prevState.userTanks, res, i);
                 return {
                   ...prevState,
                   map: curtMap,
