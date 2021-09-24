@@ -1,30 +1,14 @@
-import _, { map } from "lodash";
-import Bullet from "../class/bullet";
+import { matrixMethods } from "./math";
 import {
-  DirectionEnum,
   DirectionValue,
   GameItem,
   GameItemEnum,
   GameMap,
-  IBullet,
   IGameItem,
   IMoveItem,
-  ITank,
   Location,
   MapSize,
-  Matrix,
 } from "../type";
-
-type Range = (start: number, end: number) => number[];
-export const range: Range = (start, end) => {
-  const length = end - start;
-  return length > 0 ? [...Array(length).keys()].map((val) => val + start) : [];
-};
-
-type CreateMatrix = <T>([col, row]: MapSize, val: T) => Matrix<T>;
-export const createMatrix: CreateMatrix = ([col, row], val) => {
-  return range(0, row).map(() => range(0, col).map(() => val));
-};
 
 type SetItemInMap = (
   map: GameMap,
@@ -32,10 +16,7 @@ type SetItemInMap = (
   location: Location
 ) => GameMap;
 export const setItemInMap: SetItemInMap = (map, item, [x, y]) => {
-  const cloneMap = _.cloneDeep(map);
-  cloneMap[y][x] = item;
-
-  return cloneMap;
+  return map.setIn([y, x], item);
 };
 
 type SetComplexItemInMap = (map: GameMap, item: IMoveItem) => GameMap;
@@ -56,7 +37,7 @@ export const moveLocation: MoveLocation = (direction, item, gameMap) => {
   const newMap = removeCurrentItem(gameMap, item.complexLocations[0].location);
   const canMove = canMoveInMap(newMap);
   const prevLocations = item.complexLocations.map(({ location }) => location);
-  const upedLocations = matrix[direction](prevLocations);
+  const upedLocations = matrixMethods[direction](prevLocations);
   const locations: Location[] = canMove(upedLocations)
     ? upedLocations
     : prevLocations;
@@ -78,38 +59,40 @@ export const moveLocation: MoveLocation = (direction, item, gameMap) => {
 };
 
 type RemoveCurrentItem = (map: GameMap, location: Location) => GameMap;
-const removeCurrentItem: RemoveCurrentItem = (map, [x, y]) => {
-  const item = map[y][x];
+export const removeCurrentItem: RemoveCurrentItem = (map, [x, y]) => {
+  const item = map.get(y)!.get(x)!;
   //TODO something wrong here!!!!!
-  if (item.type === GameItemEnum.void) {
+  if (item.type === GameItemEnum.void || item.type === GameItemEnum.iron) {
     return map;
   }
 
-  const newMap = _.cloneDeep(map);
   type DFS = <T extends GameItem>(
     map: GameMap,
     location: Location,
     item: T
-  ) => void;
+  ) => GameMap;
   const dfs: DFS = (map, [x, y], item) => {
+    let newMap = map;
     const stack: Location[] = [[x, y]];
     while (stack.length) {
       const [x, y] = stack.pop()!;
-      if (!isValidLocation(map, [x, y])) {
+      if (!isValidLocation(newMap, [x, y])) {
         continue;
       }
-      const curtItem = map[y][x];
+      const curtItem = newMap.get(y)!.get(x)!;
       if (item.type === curtItem.type) {
-        map[y][x] = { type: GameItemEnum.void };
+        newMap = setItemInMap(newMap, { type: GameItemEnum.void }, [x, y]);
         stack.push([x - 1, y]);
         stack.push([x + 1, y]);
         stack.push([x, y + 1]);
         stack.push([x, y - 1]);
       }
     }
+
+    return newMap;
   };
-  dfs(newMap, [x, y], item);
-  return newMap;
+
+  return dfs(map, [x, y], item);
 };
 
 type IsValidLocation = (gameMap: GameMap, location: Location) => boolean;
@@ -121,15 +104,15 @@ export const isValidLocation: IsValidLocation = (gameMap, [x, y]) => {
   return matchWidth && matchHeight;
 };
 
-type CanMoveInMap = (gameMap: GameMap) => (locations: Location[]) => boolean;
 type CanMove = (location: Location) => boolean;
-const canMoveInMap: CanMoveInMap = (gameMap) => (locations) => {
+type CanMoveInMap = (gameMap: GameMap) => (locations: Location[]) => boolean;
+export const canMoveInMap: CanMoveInMap = (gameMap) => (locations) => {
   const canMove: CanMove = ([x, y]) => {
     if (!isValidLocation(gameMap, [x, y])) {
       return false;
     }
 
-    const curtItemType = gameMap[y][x].type;
+    const curtItemType = gameMap.get(y)!.get(x)!.type;
     const isVoid = curtItemType === GameItemEnum.void;
 
     return isVoid;
@@ -140,7 +123,7 @@ const canMoveInMap: CanMoveInMap = (gameMap) => (locations) => {
 
 type GetMapSize = (gameMap: GameMap) => MapSize;
 export const getMapSize: GetMapSize = (gameMap) => {
-  return [gameMap[0].length, gameMap.length];
+  return [gameMap.get(0)!.size, gameMap.size];
 };
 
 type UpdateMap = (gameMap: GameMap, item: IMoveItem) => GameMap;
@@ -152,45 +135,4 @@ export const updateMap: UpdateMap = (map, item) => {
   const mapWithUpdatedItem = setComplexItemInMap(mapWithoutItem, item);
 
   return mapWithUpdatedItem;
-};
-
-type ChangeIthVal = <T>(arr: T[], item: T, i: number) => T[];
-export const changeIthVal: ChangeIthVal = (arr, item, i) => {
-  const newArr = _.cloneDeep(arr);
-  newArr[i] = item;
-  return newArr;
-};
-
-export const matrix = {
-  [DirectionEnum.up]: (locations: Location[]) => {
-    return locations.map(([x, y]): Location => [x, y - 1]);
-  },
-  [DirectionEnum.down]: (locations: Location[]) => {
-    return locations.map(([x, y]): Location => [x, y + 1]);
-  },
-  [DirectionEnum.left]: (locations: Location[]) => {
-    return locations.map(([x, y]): Location => [x - 1, y]);
-  },
-  [DirectionEnum.right]: (locations: Location[]) => {
-    return locations.map(([x, y]): Location => [x + 1, y]);
-  },
-};
-
-type GetBulletLocation = (tank: ITank) => IBullet;
-export const getBulletLocation: GetBulletLocation = (tank) => {
-  const { complexLocations, direction } = tank;
-  const mapToMatrix = {
-    [DirectionEnum.up]: [0, -1],
-    [DirectionEnum.down]: [0, 2],
-    [DirectionEnum.left]: [-1, 0],
-    [DirectionEnum.right]: [2, 0],
-  } as const;
-  const matrix = mapToMatrix[direction];
-  const basicLocation = complexLocations[0].location;
-  const location: Location = [
-    matrix[0] + basicLocation[0],
-    matrix[1] + basicLocation[1],
-  ];
-  const bullet = new Bullet(location, direction);
-  return bullet;
 };

@@ -1,13 +1,12 @@
 import createSlice from "redux-prim";
 import {
-  changeIthVal,
-  createMatrix,
-  getBulletLocation,
+  canMoveInMap,
   isValidLocation,
   moveLocation,
+  removeCurrentItem,
   setComplexItemInMap,
   updateMap,
-} from "../lib/utils";
+} from "../lib/map";
 import Tank from "../class/tank";
 import {
   GameItemEnum,
@@ -20,53 +19,36 @@ import {
   DirectionValue,
   IBullet,
 } from "../type";
-
-// type PartialState = Partial<IGame>;
+import { changeIthVal, removeKthVal } from "../lib/data";
+import { getBulletLocation } from "../lib/event";
+import { createMatrix, matrixMethods } from "../lib/math";
+import { List } from "immutable";
 
 type GameDefaultState = () => IGame;
 const getDefaultState: GameDefaultState = () => ({
-  map: [[]],
+  map: List(List()),
   isInited: false,
-  userTanks: [],
-  enemyTanks: [],
-  bullets: [],
+  userTanks: List(),
+  enemyTanks: List(),
+  bullets: List(),
 });
 
 export const { actions, selector, reducer } = createSlice(
   "game",
   getDefaultState,
-  ({ initState, mergeState, setState }) => {
+  ({ setState }) => {
     return {
       createMap([col, row]: MapSize) {
         return setState((state): IGame => {
           const map: GameMap = createMatrix([col, row], {
             type: GameItemEnum.void,
           });
+
           const curtState: IGame = {
             ...state,
-            map: map,
+            map: map.setIn([3, 3], { type: GameItemEnum.water }),
             isInited: true,
           };
-          return curtState;
-        });
-      },
-      createBullet() {
-        return setState((state): IGame => {
-          const bullet = getBulletLocation(state.userTanks[0]);
-          if (
-            !bullet.complexLocations.every((item) =>
-              isValidLocation(state.map, item.location)
-            )
-          ) {
-            return state;
-          }
-          const bullets = [...state.bullets, bullet];
-          const curtState = {
-            ...state,
-            bullets,
-            map: setComplexItemInMap(state.map, bullet),
-          };
-
           return curtState;
         });
       },
@@ -82,10 +64,10 @@ export const { actions, selector, reducer } = createSlice(
             | Pick<IGame, "enemyTanks"> =
             type === GameItemEnum.user1 || type === GameItemEnum.user2
               ? {
-                  userTanks: [...state.userTanks, tank],
+                  userTanks: state.userTanks.push(tank),
                 }
               : {
-                  enemyTanks: [...state.enemyTanks, tank],
+                  enemyTanks: state.enemyTanks.push(tank),
                 };
 
           const curtState = {
@@ -104,83 +86,124 @@ export const { actions, selector, reducer } = createSlice(
         enemyTankIndex: number
       ) {
         return setState((state): IGame => {
+          const i =
+            tankType === GameItemEnum.user1 || tankType === GameItemEnum.user2
+              ? tankType === GameItemEnum.user1
+                ? 0
+                : 1
+              : enemyTankIndex;
+          const tank = state.userTanks.get(i)!;
+          const curtTank = moveLocation(event, tank, state.map);
+          const curtUserTanks = changeIthVal(state.userTanks, curtTank, i);
+          const newMap = updateMap(state.map, curtTank);
+          const curtState = {
+            ...state,
+            map: newMap,
+            userTanks: curtUserTanks,
+          };
+          return curtState;
+        });
+      },
+      createBullet() {
+        return setState((state): IGame => {
+          const bullet = getBulletLocation(state.userTanks.get(0)!);
           if (
-            tankType === GameItemEnum.user1 ||
-            tankType === GameItemEnum.user2
+            !bullet.complexLocations.every((item) =>
+              isValidLocation(state.map, item.location)
+            )
           ) {
-            const updateTanksState = state.userTanks.reduce(
-              (prevState, tank, i) => {
-                if (tank.type !== tankType) {
-                  return prevState;
-                }
-                const curtMap = setComplexItemInMap(prevState.map, tank);
-                const curtTank = moveLocation(event, tank, curtMap);
-                const curtUserTanks = changeIthVal(
-                  prevState.userTanks,
-                  curtTank,
-                  i
-                );
-                const newMap = updateMap(prevState.map, curtTank);
+            return state;
+          }
+          const bullets = state.bullets.push(bullet);
+          const curtState = {
+            ...state,
+            bullets,
+            map: setComplexItemInMap(state.map, bullet),
+          };
+
+          return curtState;
+        });
+      },
+      moveBullets() {
+        return setState((state): IGame => {
+          const { bullets } = state;
+          const [updateBulletState, curtBullets] = bullets.reduce(
+            ([prevState, list], bullet, i) => {
+              if (!bullet) {
+                console.log(state);
+                console.log(bullets);
+                return [prevState, list];
+              }
+              const { direction } = bullet;
+              const newMap = removeCurrentItem(
+                prevState.map,
+                bullet.complexLocations[0].location
+              );
+              const prevLocations = bullet.complexLocations.map(
+                ({ location }) => location
+              );
+              const upedLocations = matrixMethods[direction](prevLocations);
+              if (
+                !upedLocations.every((location) =>
+                  isValidLocation(newMap, location)
+                )
+              ) {
+                const curtBullets = removeKthVal(prevState.bullets, i);
                 const curtState = {
                   ...prevState,
                   map: newMap,
-                  userTanks: curtUserTanks,
+                  bullets: curtBullets,
                 };
-                return curtState;
-              },
-              state
-            );
+                return [curtState, list];
+              }
+              const canMove = canMoveInMap(newMap);
+              const canBulletMove = canMove(upedLocations);
+              if (!canBulletMove) {
+                const curtMap = upedLocations.reduce(
+                  (prevMap, location) => removeCurrentItem(prevMap, location),
+                  newMap
+                );
+                const curtBullets = removeKthVal(prevState.bullets, i);
+                const curtState = {
+                  ...prevState,
+                  map: curtMap,
+                  bullets: curtBullets,
+                };
+                return [curtState, list];
+              }
+              const locations = upedLocations;
 
-            return updateTanksState;
-          } else {
-            return state.enemyTanks.reduce((prevState, tank, i) => {
-              if (i !== enemyTankIndex) {
-                return prevState;
-              }
-              const curtMap = setComplexItemInMap(prevState.map, tank);
-              const curtTank = moveLocation(event, tank, curtMap);
-              const curtUserTanks = changeIthVal(
-                prevState.enemyTanks,
-                curtTank,
-                i
+              const complexLocations = bullet.complexLocations.map(
+                (complexLocation, i) => {
+                  const location = locations[i];
+                  return {
+                    ...complexLocation,
+                    prevLocation: complexLocation.location,
+                    location,
+                  };
+                }
               );
-              const newMap = updateMap(prevState.map, curtTank);
-              const curtState = {
-                ...prevState,
-                map: newMap,
-                userTanks: curtUserTanks,
+              const curtBullet = {
+                ...bullet,
+                complexLocations,
+                direction,
               };
-              return curtState;
-            }, state);
-          }
-        });
-      },
-      moveBullet(event: DirectionValue, bulletIndex: number) {
-        return setState((state): IGame => {
-          const updateBulletState = state.bullets.reduce(
-            (prevState, bullet, i) => {
-              if (i !== bulletIndex) {
-                return prevState;
-              }
-              const curtMap = setComplexItemInMap(prevState.map, bullet);
-              const curtBullet = moveLocation(event, bullet, curtMap);
-              const curtBullets = changeIthVal(
-                prevState.bullets,
-                curtBullet,
-                i
-              );
-              const newMap = updateMap(prevState.map, curtBullet);
+              const curtBullets = list.push(curtBullet);
+              const updatedMap = updateMap(newMap, curtBullet);
               const curtState = {
                 ...prevState,
-                map: newMap,
+                map: updatedMap,
                 bullets: curtBullets,
               };
-              return curtState;
+              return [curtState, curtBullets];
             },
-            state
+            [state, List<IBullet>()] as const
           );
 
-          return updateBulletState;
+          return {
+            ...updateBulletState,
+            bullets: curtBullets,
+          };
         });
       },
     };

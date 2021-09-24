@@ -8,17 +8,17 @@ const ControlPanal: FC = () => {
   const dispatch = useDispatch();
   const gameState = useSelector(selector);
   const { userTanks, isInited } = gameState;
-  const { length } = userTanks;
+  const { size } = userTanks;
 
   const addTank = useCallback(() => {
     dispatch(
       actions.createTank(
         [0, 0],
-        length ? GameItemEnum.user2 : GameItemEnum.user1,
+        size ? GameItemEnum.user2 : GameItemEnum.user1,
         DirectionEnum.up
       )
     );
-  }, [dispatch, length]);
+  }, [dispatch, size]);
 
   const createMap = useCallback(() => {
     dispatch(actions.createMap([52, 36]));
@@ -27,7 +27,7 @@ const ControlPanal: FC = () => {
   return (
     <div>
       {!isInited && <button onClick={createMap}>Create Map!</button>}
-      {isInited && length < 2 && <button onClick={addTank}>Add tank!</button>}
+      {isInited && size < 2 && <button onClick={addTank}>Add tank!</button>}
     </div>
   );
 };

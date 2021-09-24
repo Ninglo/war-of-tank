@@ -7,9 +7,8 @@ import { GameMap } from "./gameMap/view";
 import "./index.scss";
 import { ONE_SECOND } from "../const/time";
 import _ from "lodash";
-import { getBulletLocation } from "../lib/utils";
 
-const MapEvent = {
+const EventMap = {
   w: DirectionEnum.up,
   s: DirectionEnum.down,
   a: DirectionEnum.left,
@@ -26,52 +25,53 @@ const App: FC = () => {
   const { userTanks } = gameState;
 
   useEffect(() => {
-    document.addEventListener(
-      "keydown",
-      _.throttle((event: KeyboardEvent) => {
-        if (
-          event.key === "ArrowUp" ||
+    const eventHandler = _.throttle((event: KeyboardEvent) => {
+      if (
+        (event.key === "ArrowUp" ||
           event.key === "ArrowDown" ||
           event.key === "ArrowLeft" ||
-          event.key === "ArrowRight"
-        ) {
-          dispatch(
-            actions.moveTank(GameItemEnum.user1, MapEvent[event.key], -1)
-          );
-        }
-      }, ONE_SECOND)
-    );
-  }, [dispatch]);
-
-  useEffect(() => {
-    document.addEventListener(
-      "keypress",
-      _.throttle((event: KeyboardEvent) => {
-        if (
-          event.key === "w" ||
-          event.key === "s" ||
-          event.key === "a" ||
-          event.key === "d"
-        ) {
-          dispatch(
-            actions.moveTank(GameItemEnum.user2, MapEvent[event.key], -1)
-          );
-        }
-      }, ONE_SECOND)
-    );
-  }, [dispatch]);
-
-  useEffect(() => {
-    console.log(233);
-    const eventHandler = _.throttle((event: KeyboardEvent) => {
-      if (event.key === "j" && userTanks.length > 0) {
-        dispatch(actions.createBullet());
+          event.key === "ArrowRight") &&
+        userTanks.size > 0
+      ) {
+        dispatch(actions.moveTank(GameItemEnum.user1, EventMap[event.key], -1));
       }
       console.log(1);
-    }, 12 * ONE_SECOND);
+    }, 10 * ONE_SECOND);
+    document.addEventListener("keydown", eventHandler);
+    return () => document.removeEventListener("keypress", eventHandler);
+  }, [dispatch, userTanks.size]);
+
+  useEffect(() => {
+    const eventHandler = _.throttle((event: KeyboardEvent) => {
+      if (
+        (event.key === "w" ||
+          event.key === "s" ||
+          event.key === "a" ||
+          event.key === "d") &&
+        userTanks.size > 1
+      ) {
+        dispatch(actions.moveTank(GameItemEnum.user2, EventMap[event.key], -1));
+      }
+    }, 10 * ONE_SECOND);
     document.addEventListener("keypress", eventHandler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, userTanks.length]);
+    return () => document.removeEventListener("keypress", eventHandler);
+  }, [dispatch, userTanks.size]);
+
+  useEffect(() => {
+    const eventHandler = _.throttle((event: KeyboardEvent) => {
+      if (event.key === "j" && userTanks.size > 0) {
+        dispatch(actions.createBullet());
+      }
+    }, 1 * ONE_SECOND);
+    document.addEventListener("keypress", eventHandler);
+    return () => document.removeEventListener("keypress", eventHandler);
+  }, [dispatch, userTanks.size]);
+
+  useEffect(() => {
+    const eventHandler = () => dispatch(actions.moveBullets());
+    const id = setInterval(eventHandler, 30 * ONE_SECOND);
+    return () => clearInterval(id);
+  }, [dispatch]);
 
   return (
     <div className="App">

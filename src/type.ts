@@ -1,3 +1,5 @@
+import { List } from "immutable";
+
 type EnumValue<T> = T[keyof T];
 const DirectionEnum = {
   up: "up",
@@ -5,7 +7,7 @@ const DirectionEnum = {
   left: "left",
   right: "right",
 } as const;
-type Matrix<T = unknown> = T[][];
+type Matrix<T = unknown> = List<List<T>>;
 type DirectionType = keyof typeof DirectionEnum;
 type DirectionValue = EnumValue<typeof DirectionEnum>;
 const GameItemEnum = {
@@ -15,6 +17,8 @@ const GameItemEnum = {
   enemyTank: "enemy",
   water: "water",
   bullet: "bullet",
+  wall: "wall",
+  iron: "iron",
 } as const;
 type GameItemType = typeof GameItemEnum;
 type GameItem = {
@@ -23,8 +27,8 @@ type GameItem = {
   locationType?: number;
 };
 type IGameItem = GameItem;
-type GameRow = GameItem[];
-type GameMap = GameRow[];
+type GameRow = List<GameItem>;
+type GameMap = List<GameRow>;
 interface IGameRow {
   row: GameRow;
 }
@@ -47,9 +51,9 @@ interface IMoveItem<T = EnumValue<GameItemType>> {
 interface IGame {
   map: GameMap;
   isInited: boolean;
-  userTanks: ITank[];
-  enemyTanks: ITank[];
-  bullets: IBullet[];
+  userTanks: List<ITank>;
+  enemyTanks: List<ITank>;
+  bullets: List<IBullet>;
 }
 
 type TankType =
