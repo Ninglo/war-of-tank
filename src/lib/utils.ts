@@ -1,13 +1,15 @@
-import _ from "lodash";
+import _, { map } from "lodash";
+import Bullet from "../class/bullet";
 import {
   DirectionEnum,
   DirectionValue,
   GameItem,
   GameItemEnum,
   GameMap,
-  IGame,
+  IBullet,
   IGameItem,
   IMoveItem,
+  ITank,
   Location,
   MapSize,
   Matrix,
@@ -111,7 +113,7 @@ const removeCurrentItem: RemoveCurrentItem = (map, [x, y]) => {
 };
 
 type IsValidLocation = (gameMap: GameMap, location: Location) => boolean;
-const isValidLocation: IsValidLocation = (gameMap, [x, y]) => {
+export const isValidLocation: IsValidLocation = (gameMap, [x, y]) => {
   const [width, height] = getMapSize(gameMap);
   const matchWidth = x >= 0 && x < width;
   const matchHeight = y >= 0 && y < height;
@@ -141,26 +143,15 @@ export const getMapSize: GetMapSize = (gameMap) => {
   return [gameMap[0].length, gameMap.length];
 };
 
-type UpdateMap = (state: IGame) => IGame;
-export const updateMap: UpdateMap = (state) => {
-  const mapWithUserTank = state.userTanks.reduce((prevMap, tank) => {
-    const map = removeCurrentItem(
-      prevMap,
-      tank.complexLocations[0].prevLocation
-    );
-    return setComplexItemInMap(map, tank);
-  }, state.map);
-  const mapWithUserAndEnemyTank = state.enemyTanks.reduce((prevMap, tank) => {
-    const map = removeCurrentItem(
-      prevMap,
-      tank.complexLocations[0].prevLocation
-    );
-    return setComplexItemInMap(map, tank);
-  }, mapWithUserTank);
-  return {
-    ...state,
-    map: mapWithUserAndEnemyTank,
-  };
+type UpdateMap = (gameMap: GameMap, item: IMoveItem) => GameMap;
+export const updateMap: UpdateMap = (map, item) => {
+  const mapWithoutItem = removeCurrentItem(
+    map,
+    item.complexLocations[0].prevLocation
+  );
+  const mapWithUpdatedItem = setComplexItemInMap(mapWithoutItem, item);
+
+  return mapWithUpdatedItem;
 };
 
 type ChangeIthVal = <T>(arr: T[], item: T, i: number) => T[];
@@ -183,4 +174,23 @@ export const matrix = {
   [DirectionEnum.right]: (locations: Location[]) => {
     return locations.map(([x, y]): Location => [x + 1, y]);
   },
+};
+
+type GetBulletLocation = (tank: ITank) => IBullet;
+export const getBulletLocation: GetBulletLocation = (tank) => {
+  const { complexLocations, direction } = tank;
+  const mapToMatrix = {
+    [DirectionEnum.up]: [0, -1],
+    [DirectionEnum.down]: [0, 2],
+    [DirectionEnum.left]: [-1, 0],
+    [DirectionEnum.right]: [2, 0],
+  } as const;
+  const matrix = mapToMatrix[direction];
+  const basicLocation = complexLocations[0].location;
+  const location: Location = [
+    matrix[0] + basicLocation[0],
+    matrix[1] + basicLocation[1],
+  ];
+  const bullet = new Bullet(location, direction);
+  return bullet;
 };

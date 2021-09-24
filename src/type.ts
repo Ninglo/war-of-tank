@@ -49,6 +49,7 @@ interface IGame {
   isInited: boolean;
   userTanks: ITank[];
   enemyTanks: ITank[];
+  bullets: IBullet[];
 }
 
 type TankType =
