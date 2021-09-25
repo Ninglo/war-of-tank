@@ -6,7 +6,7 @@ import ControlPanal from "./controlPanal/view";
 import { GameMap } from "./gameMap/view";
 import "./index.scss";
 import { ONE_SECOND } from "../const/time";
-import _ from "lodash";
+import { throttle } from "lodash";
 
 const EventMap = {
   w: DirectionEnum.up,
@@ -25,7 +25,7 @@ const App: FC = () => {
   const { userTanks } = gameState;
 
   useEffect(() => {
-    const eventHandler = _.throttle((event: KeyboardEvent) => {
+    const eventHandler = throttle((event: KeyboardEvent) => {
       if (
         (event.key === "ArrowUp" ||
           event.key === "ArrowDown" ||
@@ -33,16 +33,16 @@ const App: FC = () => {
           event.key === "ArrowRight") &&
         userTanks.size > 0
       ) {
+        console.log(event.key, userTanks.size);
         dispatch(actions.moveTank(GameItemEnum.user1, EventMap[event.key], -1));
       }
-      console.log(1);
-    }, 10 * ONE_SECOND);
+    }, 1 * ONE_SECOND);
     document.addEventListener("keydown", eventHandler);
     return () => document.removeEventListener("keypress", eventHandler);
   }, [dispatch, userTanks.size]);
 
   useEffect(() => {
-    const eventHandler = _.throttle((event: KeyboardEvent) => {
+    const eventHandler = throttle((event: KeyboardEvent) => {
       if (
         (event.key === "w" ||
           event.key === "s" ||
@@ -52,15 +52,15 @@ const App: FC = () => {
       ) {
         dispatch(actions.moveTank(GameItemEnum.user2, EventMap[event.key], -1));
       }
-    }, 10 * ONE_SECOND);
+    }, 1 * ONE_SECOND);
     document.addEventListener("keypress", eventHandler);
     return () => document.removeEventListener("keypress", eventHandler);
   }, [dispatch, userTanks.size]);
 
   useEffect(() => {
-    const eventHandler = _.throttle((event: KeyboardEvent) => {
+    const eventHandler = throttle((event: KeyboardEvent) => {
       if (event.key === "j" && userTanks.size > 0) {
-        dispatch(actions.createBullet());
+        dispatch(actions.tankShoot());
       }
     }, 1 * ONE_SECOND);
     document.addEventListener("keypress", eventHandler);
@@ -69,7 +69,7 @@ const App: FC = () => {
 
   useEffect(() => {
     const eventHandler = () => dispatch(actions.moveBullets());
-    const id = setInterval(eventHandler, 30 * ONE_SECOND);
+    const id = setInterval(eventHandler, 240 * ONE_SECOND);
     return () => clearInterval(id);
   }, [dispatch]);
 

@@ -4,9 +4,7 @@ import { MapSize, Matrix, DirectionEnum, Location } from "../type";
 type Range = (start: number, end: number) => List<number>;
 export const range: Range = (start, end) => {
   const length = end - start;
-  return length > 0
-    ? List([...Array(length).keys()].map((val) => val + start))
-    : List();
+  return List([...Array(length).keys()].map((val) => val + start));
 };
 
 type CreateMatrix = <T>([col, row]: MapSize, val: T) => Matrix<T>;

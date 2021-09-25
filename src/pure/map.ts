@@ -4,11 +4,13 @@ import {
   GameItem,
   GameItemEnum,
   GameMap,
+  IGame,
   IGameItem,
   IMoveItem,
   Location,
   MapSize,
 } from "../type";
+import { clearItem, isSame } from "./data";
 
 type SetItemInMap = (
   map: GameMap,
@@ -23,7 +25,11 @@ type SetComplexItemInMap = (map: GameMap, item: IMoveItem) => GameMap;
 export const setComplexItemInMap: SetComplexItemInMap = (map, item) => {
   return item.complexLocations.reduce(
     (prevMap, { location, locationType }) =>
-      setItemInMap(prevMap, { type: item.type, locationType }, location),
+      setItemInMap(
+        prevMap,
+        { type: item.type, locationType, id: item.id },
+        location
+      ),
     map
   );
 };
@@ -58,11 +64,42 @@ export const moveLocation: MoveLocation = (direction, item, gameMap) => {
   return res;
 };
 
+type DeepClearCurrentItem = (state: IGame, location: Location) => IGame;
+export const deepClearCurrentItem: DeepClearCurrentItem = (state, location) => {
+  const { map } = state;
+  const item = getItem(map, location);
+  if (
+    [
+      GameItemEnum.bullet,
+      GameItemEnum.user1,
+      GameItemEnum.user2,
+      GameItemEnum.enemyTank,
+    ].some(isSame(item.type))
+  ) {
+    const curtMap = removeCurrentItem(map, location);
+    const curtState = clearItem(state, item as IMoveItem);
+    return {
+      ...curtState,
+      map: curtMap,
+    };
+  } else {
+    const res = {
+      ...state,
+      map: removeCurrentItem(map, location),
+    };
+    return res;
+  }
+};
+
 type RemoveCurrentItem = (map: GameMap, location: Location) => GameMap;
-export const removeCurrentItem: RemoveCurrentItem = (map, [x, y]) => {
-  const item = map.get(y)!.get(x)!;
+export const removeCurrentItem: RemoveCurrentItem = (map, location) => {
+  const item = getItem(map, location);
   //TODO something wrong here!!!!!
-  if (item.type === GameItemEnum.void || item.type === GameItemEnum.iron) {
+  if (
+    [GameItemEnum.void, GameItemEnum.water, GameItemEnum.iron].some(
+      (type) => type === item.type
+    )
+  ) {
     return map;
   }
 
@@ -76,23 +113,20 @@ export const removeCurrentItem: RemoveCurrentItem = (map, [x, y]) => {
     const stack: Location[] = [[x, y]];
     while (stack.length) {
       const [x, y] = stack.pop()!;
-      if (!isValidLocation(newMap, [x, y])) {
-        continue;
-      }
-      const curtItem = newMap.get(y)!.get(x)!;
-      if (item.type === curtItem.type) {
+      const curtItem = getItem(newMap, [x, y]);
+      if (item.type === curtItem.type && item.id === curtItem.id) {
         newMap = setItemInMap(newMap, { type: GameItemEnum.void }, [x, y]);
-        stack.push([x - 1, y]);
-        stack.push([x + 1, y]);
-        stack.push([x, y + 1]);
-        stack.push([x, y - 1]);
+        isValidLocation(newMap, [x - 1, y]) && stack.push([x - 1, y]);
+        isValidLocation(newMap, [x + 1, y]) && stack.push([x + 1, y]);
+        isValidLocation(newMap, [x, y + 1]) && stack.push([x, y + 1]);
+        isValidLocation(newMap, [x, y - 1]) && stack.push([x, y - 1]);
       }
     }
 
     return newMap;
   };
 
-  return dfs(map, [x, y], item);
+  return dfs(map, location, item);
 };
 
 type IsValidLocation = (gameMap: GameMap, location: Location) => boolean;
@@ -112,7 +146,7 @@ export const canMoveInMap: CanMoveInMap = (gameMap) => (locations) => {
       return false;
     }
 
-    const curtItemType = gameMap.get(y)!.get(x)!.type;
+    const curtItemType = getItem(gameMap, [x, y]).type;
     const isVoid = curtItemType === GameItemEnum.void;
 
     return isVoid;
@@ -136,3 +170,6 @@ export const updateMap: UpdateMap = (map, item) => {
 
   return mapWithUpdatedItem;
 };
+
+type GetItem = (map: GameMap, location: Location) => GameItem;
+export const getItem: GetItem = (map, [x, y]) => map.get(y)!.get(x)!;

@@ -5,13 +5,10 @@ import { selector } from "../../modal/gameSlice";
 import React from "react";
 
 const GameItem = React.memo(({ type, direction }: IGameItem) => {
-  return (
-    <div
-      className={`game-item game-item-${type} ${
-        direction ? `game-item-direction-${direction}` : ""
-      }`}
-    ></div>
-  );
+  const className = `game-item game-item-${type} ${
+    direction ? `game-item-direction-${direction}` : ""
+  }`;
+  return <div className={className}></div>;
 });
 
 const GameRow = React.memo(({ row }: IGameRow) => {

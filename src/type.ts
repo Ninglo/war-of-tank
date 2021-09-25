@@ -1,4 +1,4 @@
-import { List } from "immutable";
+import { List, Map } from "immutable";
 
 type EnumValue<T> = T[keyof T];
 const DirectionEnum = {
@@ -21,10 +21,17 @@ const GameItemEnum = {
   iron: "iron",
 } as const;
 type GameItemType = typeof GameItemEnum;
+type StaticItemType =
+  | GameItemType["iron"]
+  | GameItemType["void"]
+  | GameItemType["wall"]
+  | GameItemType["water"];
+type MoveItemType = Exclude<EnumValue<GameItemType>, StaticItemType>;
 type GameItem = {
   type: EnumValue<GameItemType>;
   direction?: DirectionValue;
   locationType?: number;
+  id?: number;
 };
 type IGameItem = GameItem;
 type GameRow = List<GameItem>;
@@ -42,18 +49,19 @@ type ComplexLocation = {
 };
 type IBullet = IMoveItem<GameItemType["bullet"]>;
 type ITank = IMoveItem<TankType>;
-interface IMoveItem<T = EnumValue<GameItemType>> {
+interface IMoveItem<T = MoveItemType> {
   complexLocations: ComplexLocation[];
   type: T;
   direction: DirectionValue;
+  id: number;
 }
 
 interface IGame {
   map: GameMap;
   isInited: boolean;
-  userTanks: List<ITank>;
-  enemyTanks: List<ITank>;
-  bullets: List<IBullet>;
+  userTanks: Map<string | number, ITank>;
+  enemyTanks: Map<string | number, ITank>;
+  bullets: Map<string | number, IBullet>;
 }
 
 type TankType =
@@ -62,6 +70,8 @@ type TankType =
   | GameItemType["enemyTank"];
 type MapSize = [col: number, row: number];
 type Location = [x: number, y: number];
+
+type SetStateMethod = (state: IGame) => IGame;
 
 export { GameItemEnum, DirectionEnum };
 export type {
@@ -81,4 +91,7 @@ export type {
   IMoveItem,
   IBullet,
   ComplexLocation,
+  StaticItemType,
+  MoveItemType,
+  SetStateMethod,
 };

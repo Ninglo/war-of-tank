@@ -1,3 +1,4 @@
+import { getID } from "../sideEffect/getId";
 import {
   ComplexLocation,
   DirectionEnum,
@@ -15,6 +16,7 @@ export const BulletLocationTypeEnum = {
 } as const;
 
 class Bullet implements IBullet {
+  public readonly id = getID();
   public readonly type = GameItemEnum.bullet;
   public readonly complexLocations: ComplexLocation[];
   constructor(location: Location, public readonly direction: DirectionValue) {

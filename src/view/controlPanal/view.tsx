@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import type { FC } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DirectionEnum, GameItemEnum } from "../../type";
@@ -21,8 +21,13 @@ const ControlPanal: FC = () => {
   }, [dispatch, size]);
 
   const createMap = useCallback(() => {
-    dispatch(actions.createMap([52, 36]));
+    dispatch(actions.createMap([24, 4]));
   }, [dispatch]);
+
+  useEffect(() => {
+    createMap();
+    addTank();
+  }, []);
 
   return (
     <div>

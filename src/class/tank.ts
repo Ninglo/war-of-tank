@@ -1,3 +1,4 @@
+import { getID } from "../sideEffect/getId";
 import {
   ComplexLocation,
   DirectionValue,
@@ -15,6 +16,7 @@ export const TankLocationTypeEnum = {
 
 class Tank implements ITank {
   public readonly complexLocations: ComplexLocation[];
+  public readonly id = getID();
   constructor(
     location: Location,
     public readonly type: TankType,
